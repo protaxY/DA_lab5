@@ -29,28 +29,34 @@ void Update(int pos){
                 break;
             }
         }
+        if (nextEdge != -1){
+            ++activeLength;
+            ++reminder;
+            activeEdge = activeNode->next[nextEdge];
+            activeEdge->suffixLink = root;
+        } else {
+            node* newNode = new node();
+            newNode->l = pos;
+            activeNode->next.push_back(newNode);
+            return;
+//            activeEdge = nullptr;
+        }
     } else if (str[activeEdge->l + activeLength] == str[pos]){
         ++activeLength;
         ++reminder;
         if (activeLength == *activeEdge->r - activeEdge->l + 1){
             activeNode = activeEdge;
+            activeEdge = nullptr;
         }
         return;
-    }
-
-    if (nextEdge != -1){
-        ++activeLength;
-        ++reminder;
-        activeEdge = activeNode->next[nextEdge];
-        activeEdge->suffixLink = previousNode;
     } else {
-        if (reminder){
+        while (reminder){
             node* newNode = new node();
             newNode->suffixLink = root;
             if (activeLength == 0){
-                newNode->l = *activeNode->r + 1;
+                newNode->l = pos;
             } else {
-                activeEdge->r = new int(activeNode->l + activeLength);
+                activeEdge->r = new int(activeEdge->l + activeLength - 1);
                 newNode->l = pos;
                 node* sideNode = new node();
                 sideNode->suffixLink = root;
@@ -59,18 +65,27 @@ void Update(int pos){
             }
             activeEdge->next.push_back(newNode);
             --reminder;
-            activeNode = activeEdge->suffixLink;
-            previousNode = activeEdge;
-            while(reminder){
-                Update(pos);
+            if (reminder){
+                activeLength = 0;
+                activeNode = activeEdge->suffixLink;
+                previousNode = activeEdge;
+                for (int i = 0; i < activeNode->next.size(); ++i){
+                    if (str[activeNode->next[i]->l + activeLength] == str[pos - reminder]){
+                        nextEdge = i;
+                        break;
+                    }
+                }
+                activeEdge = activeNode->next[nextEdge];
+                while(str[activeEdge->l + activeLength] == str[pos - reminder]){
+                    ++activeLength;
+                }
+                previousNode->suffixLink = activeEdge;
+            } else {
+                previousNode->suffixLink = activeEdge;
+                activeEdge = nullptr;
+                activeLength = 0;
             }
-            activeEdge = nullptr;
-        } else {
-            node* newNode = new node();
-            newNode->l = pos;
-            activeNode->next.push_back(newNode);
         }
-
     }
 }
 
