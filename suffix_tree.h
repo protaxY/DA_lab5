@@ -66,44 +66,67 @@ void Update(int pos){
                 activeEdge->next.clear(); // может не надо чистить, хз
                 activeEdge->r = new int(activeEdge->l + activeLength - 1);
                 activeEdge->next.insert({str[sideNode->l], sideNode});
-                if (previousNode == activeEdge){
-                    previousNode = sideNode;
-                } else {
-                    previousNode = activeEdge; // хз, надо придумать тест
+                if (previousNode != root){
+                    previousNode = sideNode; // ЧТО??
                 }
+                activeEdge->next.insert({str[newNode->l], newNode});
+
+                if (previousNode != activeEdge && previousNode->suffixLink == root && previousNode != root){
+                    previousNode->suffixLink = activeEdge;
+                }
+            } else {
+                activeNode->next.insert({str[newNode->l], newNode});
             }
-            activeEdge->next.insert({str[newNode->l], newNode});
+
             --reminder;
-//            previousNode = activeEdge;
+
+            previousNode = activeEdge;
+
             if (reminder){
-                activeLength = 0;
                 activeNode = activeNode->suffixLink;
                 auto next = activeNode->next.find(str[pos - reminder]);
                 activeEdge = next->second;
-                while(str[activeEdge->l + activeLength] == str[pos - reminder + activeLength]){
-                    ++activeLength;
-                    if (activeLength == *activeEdge->r - activeEdge->l + 1){
-                        activeLength = 0;
-                        activeNode = activeEdge;
-                        auto next = activeNode->next.find(str[pos - reminder + activeLength]);
-                        if (next == activeNode->next.end()){
+                int cnt;
+                if (*activeNode->r == -1){
+                    cnt = activeLength - 1;
+                } else {
+                    cnt = activeLength;
+                }
+                if (cnt == 0){
+                    activeEdge == nullptr;
+                }
+                activeLength = 0;
+                while(cnt > 0 /*str[activeEdge->l + activeLength] == str[pos - cnt + activeLength]*/){
+                    if (activeEdge == nullptr){
+                        ++activeLength;
+                        if (activeLength == *activeEdge->r - activeEdge->l + 1){
+                            activeNode = activeEdge;
+                            activeLength = 0;
                             activeEdge = nullptr;
+                        }
+                    } else {
+                        auto next = activeNode->next.find(str[pos - cnt + activeLength]);
+                        if (next == activeNode->next.end()){
+                            activeEdge = nullptr; // произойдет ли это вообще
                             break;
                         } else {
                             activeEdge = next->second;
+                            ++activeLength;
+                            if (activeLength == *activeEdge->r - activeEdge->l + 1){
+                                activeNode = activeEdge;
+                                activeLength = 0;
+                                activeEdge = nullptr;
+                            }
                         }
                     }
+                    --cnt;
                 }
-
-//                Update(pos);
-
-            }
-            if (previousNode != activeEdge){
-                previousNode->suffixLink = activeEdge;
             }
         }
+        previousNode = root;
         activeEdge = nullptr;
         activeLength = 0;
+        activeNode = root;
         --END;
         Update(pos);
     }
