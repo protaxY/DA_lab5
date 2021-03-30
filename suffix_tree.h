@@ -54,6 +54,7 @@ void Update(int pos){
         return;
     } else {
         while (reminder){
+
             node* newNode = new node();
             newNode->suffixLink = root;
             newNode->l = pos;
@@ -102,6 +103,8 @@ void Update(int pos){
                 }
 
                 activeNode = activeNode->suffixLink;
+
+
                 auto next = activeNode->next.find(str[pos - activeLength]);
                 activeEdge = next->second;
                 int cnt = activeLength;
@@ -124,7 +127,7 @@ void Update(int pos){
                             activeEdge = nullptr;
                         }
                     } else {
-                        auto next = activeNode->next.find(str[pos - activeLength + cnt - a]);
+                        auto next = activeNode->next.find(str[pos - activeLength - cnt + a]);
                         if (next == activeNode->next.end()){
                             activeEdge = nullptr; // произойдет ли это вообще
                             break;
@@ -140,15 +143,34 @@ void Update(int pos){
                     }
                     --a;
                 }
+
+                if (activeEdge != nullptr && str[activeEdge->l + activeLength] == str[pos]){
+                    ++activeLength;
+                    ++reminder;
+                    return;
+                } else {
+                    auto next = activeNode->next.find(str[pos]);
+                    if (next != activeNode->next.end()){
+                        ++activeLength;
+                        ++reminder;
+                        activeEdge = next->second;
+                        return;
+                    }
+                }
+
             }
         }
-        previousNode->suffixLink = activeEdge;
+
         activeEdge = nullptr;
         activeLength = 0;
         activeNode = root;
         previousNode = root;
         --END;
         Update(pos);
+//        activeEdge = nullptr;
+//        activeLength = 0;
+//        activeNode = root;
+//        previousNode = root;
     }
 }
 
