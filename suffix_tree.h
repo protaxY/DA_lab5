@@ -13,7 +13,7 @@ struct node {
     node* suffixLink = nullptr;
 };
 
-std::string str;
+std::string pattern;
 node* activeNode = nullptr;
 node* activeEdge = nullptr;
 int activeLength = 0;
@@ -24,27 +24,27 @@ node* previousNode = root;
 void Update(int pos){
     ++END;
     if (activeEdge == nullptr){
-        auto next = activeNode->next.find(str[pos]);
+        ++reminder;
+        auto next = activeNode->next.find(pattern[pos]);
         if (next != activeNode->next.end()){
             ++activeLength;
-            ++reminder;
             activeEdge = next->second;
             if (activeLength == *activeEdge->r - activeEdge->l + 1){
                 activeNode = activeEdge;
                 activeEdge = nullptr;
                 activeLength = 0;
             }
+            return;
         } else {
             node* newNode = new node();
             newNode->l = pos;
             newNode->suffixLink = root;
-            activeNode->next.insert({str[newNode->l], newNode});
+            activeNode->next.insert({pattern[newNode->l], newNode});
+            --reminder;
         }
-        return;
-    }
-    if (str[activeEdge->l + activeLength] == str[pos]){
-        ++activeLength;
+    } else if (pattern[activeEdge->l + activeLength] == pattern[pos]){
         ++reminder;
+        ++activeLength;
         if (activeLength == *activeEdge->r - activeEdge->l + 1){
             activeNode = activeEdge;
             activeEdge = nullptr;
@@ -52,134 +52,111 @@ void Update(int pos){
             return;
         }
         return;
-    } else {
-        while (reminder){
+    }
 
-            node* newNode = new node();
-            newNode->suffixLink = root;
-            newNode->l = pos;
-            if (activeLength != 0){
-                node* sideNode = new node();
-                sideNode->l = activeEdge->l;
-                sideNode->r = new int(sideNode->l + activeLength - 1);
-                sideNode->suffixLink = root;
+    while (reminder){
+        node* newNode = new node();
+        newNode->suffixLink = root;
+        newNode->l = pos;
+        if (activeLength != 0){
+            node* sideNode = new node();
+            sideNode->l = activeEdge->l;
+            sideNode->r = new int(sideNode->l + activeLength - 1);
+            sideNode->suffixLink = root;
 
-                activeNode->next.erase(str[activeEdge->l]);
-                activeNode->next.insert({str[sideNode->l], sideNode});
+            activeNode->next.erase(pattern[activeEdge->l]);
+            activeNode->next.insert({pattern[sideNode->l], sideNode});
 
-                activeEdge->l = *sideNode->r + 1;
+            activeEdge->l = *sideNode->r + 1;
 
-                sideNode->next.insert({str[newNode->l], newNode});
-                sideNode->next.insert({str[activeEdge->l], activeEdge});
+            sideNode->next.insert({pattern[newNode->l], newNode});
+            sideNode->next.insert({pattern[activeEdge->l], activeEdge});
 
-                activeEdge = sideNode;
-                if (previousNode != root){
-                    previousNode->suffixLink = activeEdge;
-                }
-//                sideNode->suffixLink = activeEdge->suffixLink;
-//                sideNode->l = activeEdge->l + activeLength;
-//                sideNode->r = activeEdge->r;
-//                sideNode->next = activeEdge->next;
-//                activeEdge->next.clear(); // может не надо чистить, хз
-//                activeEdge->suffixLink = root;
-//                activeEdge->r = new int(activeEdge->l + activeLength - 1);
-//                activeEdge->next.insert({str[sideNode->l], sideNode});
-//                activeEdge->next.insert({str[newNode->l], newNode});
+            activeEdge = sideNode;
+            if (previousNode != root){
+                previousNode->suffixLink = activeEdge;
+            }
+        } else {
+            activeNode->next.insert({pattern[newNode->l], newNode});
+            if (previousNode != root){
+                previousNode->suffixLink = activeNode;
+            }
+        }
+
+        --reminder;
+
+        if (reminder) {
+            if (activeLength != 0) {
+                previousNode = activeEdge;
             } else {
-                activeNode->next.insert({str[newNode->l], newNode});
+                previousNode = root;
             }
 
-            --reminder;
+            if (activeNode == root) {
+                --activeLength;
+            }
 
-            if (reminder){
-                if (activeLength != 0){
-                    previousNode = activeEdge;
-                } else {
-                    previousNode = root;
-                }
+            activeNode = activeNode->suffixLink;
 
-                if (activeNode == root){
-                    --activeLength;
-                }
-
-                activeNode = activeNode->suffixLink;
-
-
-                auto next = activeNode->next.find(str[pos - activeLength]);
+            int cnt;
+            if (activeLength == 0) {
+                activeEdge = nullptr;
+            } else {
+                std::unordered_map<char, node *>::iterator next = activeNode->next.find(pattern[pos - activeLength]);
                 activeEdge = next->second;
-                int cnt = activeLength;
-//                if (*activeNode->r == -1){
-//                    cnt = activeLength - 1;
-//                } else {
-//                    cnt = activeLength;
-//                }
-                if (cnt == 0){
-                    activeEdge == nullptr;
-                }
-                activeLength = 0;
-                int a = cnt;
-                while(a > 0 /*str[activeEdge->l + activeLength] == str[pos - cnt + activeLength]*/){
-                    if (activeEdge != nullptr){
+                cnt = activeLength;
+            }
+
+            activeLength = 0;
+            int a = cnt;
+            while (a > 0) {
+                if (activeEdge != nullptr) {
+                    ++activeLength;
+                    if (activeLength == *activeEdge->r - activeEdge->l + 1) {
+                        activeNode = activeEdge;
+                        activeLength = 0;
+                        activeEdge = nullptr;
+                    }
+                } else {
+                    auto next = activeNode->next.find(pattern[pos - a]);
+                    if (next == activeNode->next.end()) {
+                        activeEdge = nullptr; // произойдет ли это вообще
+                        break;
+                    } else {
+                        activeEdge = next->second;
                         ++activeLength;
-                        if (activeLength == *activeEdge->r - activeEdge->l + 1){
+                        if (activeLength == *activeEdge->r - activeEdge->l + 1) {
                             activeNode = activeEdge;
                             activeLength = 0;
                             activeEdge = nullptr;
                         }
-                    } else {
-                        auto next = activeNode->next.find(str[pos - activeLength - cnt + a]);
-                        if (next == activeNode->next.end()){
-                            activeEdge = nullptr; // произойдет ли это вообще
-                            break;
-                        } else {
-                            activeEdge = next->second;
-                            ++activeLength;
-                            if (activeLength == *activeEdge->r - activeEdge->l + 1){
-                                activeNode = activeEdge;
-                                activeLength = 0;
-                                activeEdge = nullptr;
-                            }
-                        }
-                    }
-                    --a;
-                }
-
-                if (activeEdge != nullptr && str[activeEdge->l + activeLength] == str[pos]){
-                    ++activeLength;
-                    ++reminder;
-                    return;
-                } else {
-                    auto next = activeNode->next.find(str[pos]);
-                    if (next != activeNode->next.end()){
-                        ++activeLength;
-                        ++reminder;
-                        activeEdge = next->second;
-                        return;
                     }
                 }
+                --a;
+            }
 
+            if (activeEdge != nullptr && pattern[activeEdge->l + activeLength] == pattern[pos]) {
+                ++activeLength;
+                ++reminder;
+                return;
             }
         }
-
-        activeEdge = nullptr;
-        activeLength = 0;
-        activeNode = root;
-        previousNode = root;
-        --END;
-        Update(pos);
-//        activeEdge = nullptr;
-//        activeLength = 0;
-//        activeNode = root;
-//        previousNode = root;
     }
+
+    activeEdge = nullptr;
+    activeLength = 0;
+    activeNode = root;
+    previousNode = root;
+    --END;
+    Update(pos);
 }
 
-node* Build(){
+void Build(){
     root->l = -1;
     root->r = new int(-1);
     root->suffixLink = root;
     activeNode = root;
-    for (int i = 0; i < str.length(); ++i){
+    for (int i = 0; i < pattern.length(); ++i){
         Update(i);
     }
 }
