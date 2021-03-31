@@ -104,12 +104,11 @@ void Update(int pos){
             } else {
                 std::unordered_map<char, node *>::iterator next = activeNode->next.find(pattern[pos - activeLength]);
                 activeEdge = next->second;
-                cnt = activeLength;
             }
-
+            activeEdge = nullptr;
+            cnt = activeLength;
             activeLength = 0;
-            int a = cnt;
-            while (a > 0) {
+            while (cnt > 0) {
                 if (activeEdge != nullptr) {
                     ++activeLength;
                     if (activeLength == *activeEdge->r - activeEdge->l + 1) {
@@ -118,7 +117,7 @@ void Update(int pos){
                         activeEdge = nullptr;
                     }
                 } else {
-                    auto next = activeNode->next.find(pattern[pos - a]);
+                    auto next = activeNode->next.find(pattern[pos - cnt]);
                     if (next == activeNode->next.end()) {
                         activeEdge = nullptr; // произойдет ли это вообще
                         break;
@@ -132,7 +131,7 @@ void Update(int pos){
                         }
                     }
                 }
-                --a;
+                --cnt;
             }
 
             if (activeEdge != nullptr && pattern[activeEdge->l + activeLength] == pattern[pos]) {
