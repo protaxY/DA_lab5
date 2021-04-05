@@ -78,15 +78,24 @@ void Update(int pos){
             sideNode->next.insert({pattern[activeEdge->l], activeEdge});
 
             activeEdge = sideNode;
-            if (previousNode != root){
+            if (previousNode != root ){
                 previousNode->suffixLink = activeEdge;
             }
         } else {
-            activeNode->next.insert({pattern[newNode->l], newNode});
-
-//            if (previousNode != root){
-//                previousNode->suffixLink = activeNode;
-//            }
+            auto next = activeNode->next.find(pattern[pos]);
+            if (next == activeNode->next.end()){
+                activeNode->next.insert({pattern[newNode->l], newNode});
+            } else {
+                activeEdge = next->second;
+                ++activeLength;
+                if (activeLength == *activeEdge->r - activeEdge->l + 1) {
+                    activeNode = activeEdge;
+                    activeLength = 0;
+                    activeEdge = nullptr;
+                }
+                previousNode = root;
+                return;
+            }
         }
 
         --remainder;
@@ -137,11 +146,11 @@ void Update(int pos){
                 }
                 --cnt;
             }
-            if (activeEdge != nullptr && pattern[activeEdge->l + activeLength] == pattern[pos]) {
-                ++activeLength;
-                ++remainder;
-                return;
-            }
+//            if (activeEdge != nullptr && pattern[activeEdge->l + activeLength] == pattern[pos]) {
+//                ++activeLength;
+//                ++remainder;
+//                return;
+//            }
         }
     }
 
@@ -174,8 +183,8 @@ void Build(){
     activeNode = root;
     for (int i = 0; i < pattern.length(); ++i){
         Update(i);
-        std::cout << "Step " << i << std::endl;
-        print(root, 0);
-        std::cout << "Built\n";
+//        std::cout << "Step " << i << std::endl;
+//        print(root, 0);
+//        std::cout << "Built\n";
     }
 }

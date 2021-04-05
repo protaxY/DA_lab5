@@ -61,7 +61,7 @@ std::string MinCycleString() {
     size_t size = pattern.size();
 
     pattern += pattern;
-    pattern += '$';
+//    pattern += '$';
     Build();
 //    sf.print();
 
