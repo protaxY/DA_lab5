@@ -4,29 +4,37 @@
 #include <string>
 #include <unordered_map>
 
-int END = -1;
+int* END = new int(-1);
 
 struct node {
     int l;
-    int* r = &END;
+    int* r = END;
     std::unordered_map<char, node*> next;
     node* suffixLink = nullptr;
+    ~node(){
+        for (auto& i: next){
+            delete i.second;
+        }
+        if (r != END){
+            delete r;
+        }
+    }
 };
 
 std::string pattern;
 node* activeNode = nullptr;
 node* activeEdge = nullptr;
 int activeLength = 0;
-int reminder = 0;
+int remainder = 0;
 node* root = new node();
 node* previousNode = root;
 
 void Update(int pos){
-    ++END;
+    ++(*END);
     if (activeEdge == nullptr){
-        ++reminder;
         auto next = activeNode->next.find(pattern[pos]);
         if (next != activeNode->next.end()){
+            ++remainder;
             ++activeLength;
             activeEdge = next->second;
             if (activeLength == *activeEdge->r - activeEdge->l + 1){
@@ -36,25 +44,22 @@ void Update(int pos){
             }
             return;
         } else {
-            node* newNode = new node();
-            newNode->l = pos;
-            newNode->suffixLink = root;
-            activeNode->next.insert({pattern[newNode->l], newNode});
-            --reminder;
+            ++remainder;
         }
     } else if (pattern[activeEdge->l + activeLength] == pattern[pos]){
-        ++reminder;
+        ++remainder;
         ++activeLength;
         if (activeLength == *activeEdge->r - activeEdge->l + 1){
             activeNode = activeEdge;
             activeEdge = nullptr;
             activeLength = 0;
-            return;
         }
         return;
+    } else {
+        ++remainder;
     }
 
-    while (reminder){
+    while (remainder){
         node* newNode = new node();
         newNode->suffixLink = root;
         newNode->l = pos;
@@ -78,35 +83,34 @@ void Update(int pos){
             }
         } else {
             activeNode->next.insert({pattern[newNode->l], newNode});
-            if (previousNode != root){
-                previousNode->suffixLink = activeNode;
-            }
+
+//            if (previousNode != root){
+//                previousNode->suffixLink = activeNode;
+//            }
         }
 
-        --reminder;
+        --remainder;
 
-        if (reminder) {
+        if (remainder) {
             if (activeLength != 0) {
                 previousNode = activeEdge;
             } else {
                 previousNode = root;
             }
 
-            if (activeNode == root) {
-                --activeLength;
-            }
+//            if (activeNode == root) {
+//                --activeLength;
+//            }
 
             activeNode = activeNode->suffixLink;
 
             int cnt;
-            if (activeLength == 0) {
-                activeEdge = nullptr;
-            } else {
-                std::unordered_map<char, node *>::iterator next = activeNode->next.find(pattern[pos - activeLength]);
-                activeEdge = next->second;
-            }
             activeEdge = nullptr;
-            cnt = activeLength;
+            if (activeNode == root){
+                cnt = remainder - 1;
+            } else {
+                cnt = activeLength;
+            }
             activeLength = 0;
             while (cnt > 0) {
                 if (activeEdge != nullptr) {
@@ -133,10 +137,9 @@ void Update(int pos){
                 }
                 --cnt;
             }
-
             if (activeEdge != nullptr && pattern[activeEdge->l + activeLength] == pattern[pos]) {
                 ++activeLength;
-                ++reminder;
+                ++remainder;
                 return;
             }
         }
@@ -146,8 +149,22 @@ void Update(int pos){
     activeLength = 0;
     activeNode = root;
     previousNode = root;
-    --END;
-    Update(pos);
+}
+
+void print(node* cur, int height) {
+    if (cur != nullptr) {
+        for (int i = 0; i < height; ++i) {
+            std::cout << "   ";
+        }
+        for (int i = cur->l; i <= *cur->r; ++i) {
+            std::cout << pattern[i];
+        }
+        std::cout << std::endl;
+        for (std::unordered_map<char, node*>::iterator it = cur->next.begin(); it != cur->next.end(); ++it) {
+            print(it->second, height + 1);
+        }
+
+    }
 }
 
 void Build(){
@@ -157,5 +174,8 @@ void Build(){
     activeNode = root;
     for (int i = 0; i < pattern.length(); ++i){
         Update(i);
+        std::cout << "Step " << i << std::endl;
+        print(root, 0);
+        std::cout << "Built\n";
     }
 }
