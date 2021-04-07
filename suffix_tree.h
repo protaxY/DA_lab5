@@ -31,10 +31,10 @@ node* previousNode = root;
 
 void Update(int pos){
     ++(*END);
+    ++remainder;
     if (activeEdge == nullptr){
         auto next = activeNode->next.find(pattern[pos]);
         if (next != activeNode->next.end()){
-            ++remainder;
             ++activeLength;
             activeEdge = next->second;
             if (activeLength == *activeEdge->r - activeEdge->l + 1){
@@ -43,11 +43,8 @@ void Update(int pos){
                 activeLength = 0;
             }
             return;
-        } else {
-            ++remainder;
         }
     } else if (pattern[activeEdge->l + activeLength] == pattern[pos]){
-        ++remainder;
         ++activeLength;
         if (activeLength == *activeEdge->r - activeEdge->l + 1){
             activeNode = activeEdge;
@@ -55,8 +52,6 @@ void Update(int pos){
             activeLength = 0;
         }
         return;
-    } else {
-        ++remainder;
     }
 
     while (remainder){
@@ -107,50 +102,30 @@ void Update(int pos){
                 previousNode = root;
             }
 
-//            if (activeNode == root) {
-//                --activeLength;
-//            }
-
             activeNode = activeNode->suffixLink;
 
             int cnt;
-            activeEdge = nullptr;
             if (activeNode == root){
                 cnt = remainder - 1;
             } else {
                 cnt = activeLength;
             }
+            activeEdge = nullptr;
             activeLength = 0;
+
             while (cnt > 0) {
-                if (activeEdge != nullptr) {
-                    ++activeLength;
-                    if (activeLength == *activeEdge->r - activeEdge->l + 1) {
-                        activeNode = activeEdge;
-                        activeLength = 0;
-                        activeEdge = nullptr;
-                    }
+                auto next = activeNode->next.find(pattern[pos - cnt]);
+                activeEdge = next->second;
+                if (*activeEdge->r - activeEdge->l + 1 <= cnt){
+                    cnt -= *activeEdge->r - activeEdge->l + 1;
+                    activeNode = activeEdge;
+                    activeLength = 0;
+                    activeEdge = nullptr;
                 } else {
-                    auto next = activeNode->next.find(pattern[pos - cnt]);
-                    if (next == activeNode->next.end()) {
-                        activeEdge = nullptr; // произойдет ли это вообще
-                        break;
-                    } else {
-                        activeEdge = next->second;
-                        ++activeLength;
-                        if (activeLength == *activeEdge->r - activeEdge->l + 1) {
-                            activeNode = activeEdge;
-                            activeLength = 0;
-                            activeEdge = nullptr;
-                        }
-                    }
+                    activeLength = cnt;
+                    cnt = 0;
                 }
-                --cnt;
             }
-//            if (activeEdge != nullptr && pattern[activeEdge->l + activeLength] == pattern[pos]) {
-//                ++activeLength;
-//                ++remainder;
-//                return;
-//            }
         }
     }
 
